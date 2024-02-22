@@ -14,15 +14,66 @@ import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
 import Copyright from '@/components/copyright'
 import { OperationAlert } from '@/components/alert'
+import { useState } from 'react'
+import Loader from '@/components/loader'
+import { SignInUserLogic } from '@/presentation/view-model/Home.logic'
 
 export default function SignIn() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [emailAddress, setEmailAddress] = useState('')
+  const [errorEmailAddress, setErrorEmailAddress] = useState(false)
+  const [password, setPassword] = useState('')
+
+  const [update, setUpdate] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const keyDownHandler = (event: any) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+    }
+  }
+
+  const onChangeValue = (e: any) => {
+    let id = e.target.id
+    let value = e.target.value
+    const emailAddressValidator = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/
+    switch (id) {
+      case 'emailAddress':
+        if (value.length <= 100) {
+          setEmailAddress(value)
+          setErrorEmailAddress(!emailAddressValidator.test(value))
+        }
+        break
+      case 'password':
+        if (value.length <= 100) {
+          setPassword(value)
+        }
+        break
+    }
+  }
+
+  const signInUser = (event: React.FormEvent<HTMLFormElement>) => {
+    setIsLoading(true)
     event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    })
+    let userData = {
+      emailAddress,
+      password,
+    }
+    SignInUserLogic(SignInCallBack, userData)
+  }
+
+  const SignInCallBack = async (error: Boolean, err: any, data: any) => {
+    try {
+      setIsLoading(false)
+      if (!error) {
+        setUpdate(!update)
+        window.location.href = '/program-assignment'
+      } else {
+        const result = data.response.data
+        OperationAlert(false, result.message)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
   }
 
   return (
@@ -43,26 +94,47 @@ export default function SignIn() {
           Welcome to Social Program from The Last Bug SPA
         </Typography>
 
-        <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+        <Box component='form' noValidate sx={{ mt: 1 }}>
           <TextField
+            onKeyDown={(e) => {
+              keyDownHandler(e)
+            }}
             margin='normal'
-            required
-            fullWidth
-            id='email'
-            label='Email Address'
-            name='email'
-            autoComplete='email'
             autoFocus
+            value={emailAddress}
+            type='text'
+            required
+            id='emailAddress'
+            label='Email Address'
+            name='emailAddress'
+            fullWidth
+            error={errorEmailAddress}
+            helperText={errorEmailAddress && 'Invalid email address.'}
+            onChange={(e) => {
+              onChangeValue(e)
+            }}
+            inputProps={{
+              autoComplete: 'off',
+            }}
           />
           <TextField
+            onKeyDown={(e) => {
+              keyDownHandler(e)
+            }}
             margin='normal'
-            required
-            fullWidth
-            name='password'
-            label='Password'
+            value={password}
             type='password'
+            required
             id='password'
-            autoComplete='current-password'
+            label='Password'
+            name='password'
+            fullWidth
+            onChange={(e) => {
+              onChangeValue(e)
+            }}
+            inputProps={{
+              autoComplete: 'off',
+            }}
           />
           <FormControlLabel
             control={<Checkbox value='remember' color='primary' />}
@@ -73,9 +145,10 @@ export default function SignIn() {
             fullWidth
             variant='contained'
             sx={{ mt: 3, mb: 2 }}
-            onClick={() => {
-              OperationAlert(true)
+            onClick={(e: any) => {
+              signInUser(e)
             }}
+            disabled={errorEmailAddress || password.length === 0}
           >
             Sign In
           </Button>
@@ -94,6 +167,7 @@ export default function SignIn() {
         </Box>
       </Box>
       <Copyright sx={{ mt: 8, mb: 4 }} />
+      <Loader open={isLoading} />
     </Container>
   )
 }
