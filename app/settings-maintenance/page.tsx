@@ -16,7 +16,7 @@ const SettingsMaintenance = () => {
   }
 
   return (
-    <div>
+    <>
       <Navbar />
       <div>
         <Box sx={{ width: '100%', typography: 'body1', marginTop: '1rem' }}>
@@ -40,22 +40,16 @@ const SettingsMaintenance = () => {
                 <Tab label='Districts' value='4' />
               </TabList>
             </Box>
-            <TabPanel value='1'>
-              {/* <CountriesDatagrid /> */}
-            </TabPanel>
+            <TabPanel value='1'>{/* <CountriesDatagrid /> */}</TabPanel>
             <TabPanel value='2'>
               <CountriesDatagrid />
             </TabPanel>
-            <TabPanel value='3'>
-              {/* <CountriesDatagrid /> */}
-            </TabPanel>
-            <TabPanel value='4'>
-              {/* <CountriesDatagrid /> */}
-            </TabPanel>
+            <TabPanel value='3'>{/* <CountriesDatagrid /> */}</TabPanel>
+            <TabPanel value='4'>{/* <CountriesDatagrid /> */}</TabPanel>
           </TabContext>
         </Box>
       </div>
-    </div>
+    </>
   )
 }
 
