@@ -10,6 +10,7 @@ import {
   Grid,
   Container,
   Fade,
+  Autocomplete,
 } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
@@ -21,12 +22,17 @@ import React from 'react'
 import Datagrid from '@/components/datagrid'
 import { DeleteConfirm, OperationAlert } from '@/components/alert'
 import Loader from '@/components/loader'
-import { GetCountriesLogic } from '@/presentation/view-model/Home.logic'
 import {
-  CreateCountryLogic,
-  DeleteCountryLogic,
-  UpdateCountryLogic,
+  GetCountriesLogic,
+  GetDistrictsLogic,
+  GetRegionsLogic,
+} from '@/presentation/view-model/Home.logic'
+import {
+  CreateDistrictLogic,
+  DeleteDistrictLogic,
+  UpdateDistrictLogic,
 } from '@/presentation/view-model/SettingsMaintenance.logic'
+import toUpperCamelCase from '@/utils/toUpperCamelCase'
 
 function PaperComponent(props: PaperProps) {
   return (
@@ -39,7 +45,7 @@ function PaperComponent(props: PaperProps) {
   )
 }
 
-const CountriesDatagrid = () => {
+const DistrictsDatagrid = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [dialogText, setDialogText] = useState('')
   const [optionAPI, setOptionAPI] = useState(0)
@@ -48,9 +54,18 @@ const CountriesDatagrid = () => {
   const height = 620
 
   const [list, setList] = useState([])
+  const [districtId, setDistrictId] = useState(0)
+  const [districtName, setDistrictName] = useState('')
+  const [districtNameExists, setDistrictNameExists] = useState(false)
+
+  const [regionsListAll, setRegionsListAll] = useState([])
+  const [regionsList, setRegionList] = useState([])
+  const [region, setRegion] = useState(null)
+  const [regionId, setRegionId] = useState(0)
+
+  const [countriesList, setCountriesList] = useState([])
+  const [country, setCountry] = useState(null)
   const [countryId, setCountryId] = useState(0)
-  const [countryName, setCountryName] = useState('')
-  const [countryNameExists, setCountryNameExists] = useState(false)
 
   const columnList: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 80 },
@@ -61,6 +76,18 @@ const CountriesDatagrid = () => {
       flex: 1,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'regionName',
+      headerName: 'Region Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'districtName',
+      headerName: 'District Name',
+      width: 200,
+      flex: 1,
     },
     {
       field: 'Update',
@@ -110,24 +137,44 @@ const CountriesDatagrid = () => {
 
     switch (accion) {
       case 'Update':
+        const dataCountry: any = {
+          id: data.countryId,
+          countryName: data.countryName,
+        }
+        const dataRegion: any = {
+          id: data.regionId,
+          regionName: data.regionName,
+        }
+
         handleClickOpen('Update')
-        setCountryName(data.countryName)
-        setCountryId(data.id)
+
+        setDistrictName(data.districtName)
+        setDistrictId(data.id)
+
+        setRegion(dataRegion)
+        setRegionId(data.regionId)
+
+        setCountry(dataCountry)
+        setCountryId(data.countryId)
         break
       case 'Delete':
         // Create Delete component alert
-        DeleteConfirm('Country ' + data.countryName + ' will be deleted.').then(
-          (confirm: any) => {
-            if (confirm) {
-              DeleteCountryLogic(DeleteCountryCallBack, parseInt(data.id));
-            }
+        DeleteConfirm(
+          'District ' + data.districtName + ' will be deleted.'
+        ).then((confirm: any) => {
+          if (confirm) {
+            DeleteDistrictLogic(DeleteDistrictCallBack, parseInt(data.id))
           }
-        )
+        })
         break
     }
   }
 
-  const DeleteCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const DeleteDistrictCallBack = async (
+    error: Boolean,
+    err: any,
+    data: any
+  ) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -158,7 +205,13 @@ const CountriesDatagrid = () => {
   }
 
   const clear = () => {
-    setCountryName('')
+    setDistrictName('')
+    setDistrictId(0)
+
+    setRegion(null)
+    setRegionId(0)
+
+    setCountry(null)
     setCountryId(0)
   }
 
@@ -178,9 +231,9 @@ const CountriesDatagrid = () => {
     let id = e.target.id
     let value = e.target.value
     switch (id) {
-      case 'countryName':
+      case 'districtName':
         if (value.length <= 50) {
-          setCountryName(value)
+          setDistrictName(value)
         }
         break
     }
@@ -191,12 +244,16 @@ const CountriesDatagrid = () => {
     let data = {}
     if (optionAPI == 1) {
       data = {
-        countryName,
+        districtName,
+        regionId,
+        countryId,
       }
     } else {
       data = {
-        id: countryId,
-        countryName,
+        id: districtId,
+        districtName,
+        regionId,
+        countryId,
       }
     }
     handleClose()
@@ -207,13 +264,17 @@ const CountriesDatagrid = () => {
   const CreateOrUpdate = (option: number, data: any) => {
     setIsLoading(true)
     if (option === 1) {
-      CreateCountryLogic(CreateCountryCallBack, data)
+      CreateDistrictLogic(CreateDistrictCallBack, data)
     } else {
-      UpdateCountryLogic(UpdateCountryCallBack, data)
+      UpdateDistrictLogic(UpdateDistrictCallBack, data)
     }
   }
 
-  const CreateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const CreateDistrictCallBack = async (
+    error: Boolean,
+    err: any,
+    data: any
+  ) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -228,7 +289,11 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const UpdateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const UpdateDistrictCallBack = async (
+    error: Boolean,
+    err: any,
+    data: any
+  ) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -246,9 +311,35 @@ const CountriesDatagrid = () => {
   useEffect(() => {
     setIsLoading(true)
     GetCountriesLogic(GetCountriesCallBack)
+    GetRegionsLogic(GetRegionsCallBack)
+    GetDistrictsLogic(GetDistrictsCallBack)
   }, [update])
 
   const GetCountriesCallBack = (error: Boolean, err: string, data: any) => {
+    let newData = data
+    setIsLoading(false)
+    try {
+      if (error === false && data.length > 0) {
+        setCountriesList(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
+  }
+
+  const GetRegionsCallBack = (error: Boolean, err: string, data: any) => {
+    let newData = data
+    setIsLoading(false)
+    try {
+      if (error === false && data.length > 0) {
+        setRegionsListAll(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
+  }
+
+  const GetDistrictsCallBack = (error: Boolean, err: string, data: any) => {
     let newData = data
     setIsLoading(false)
     try {
@@ -257,6 +348,34 @@ const CountriesDatagrid = () => {
       }
     } catch (er) {
       OperationAlert(false)
+    }
+  }
+
+  const handleSelectCountry = (e: any, newValue: any) => {
+    if (newValue !== null) {
+      const countryId = newValue.id
+      // Clean the region
+      setRegionId(0)
+      setRegion(null)
+
+      // Set the country id and the country in Autocomplete component
+      setCountryId(countryId)
+      setCountry(newValue)
+
+      // Filter the regions based on the selected country
+      const filteredRegions = regionsListAll.filter(
+        (e: any) => e.countryId == countryId
+      )
+      setRegionList(filteredRegions)
+    }
+  }
+
+  const handleSelectRegion = (e: any, newValue: any) => {
+    if (newValue !== null) {
+      const regionId = newValue.id
+      // Set the region id and the region in Autocomplete component
+      setRegionId(regionId)
+      setRegion(newValue)
     }
   }
 
@@ -306,20 +425,63 @@ const CountriesDatagrid = () => {
           id='draggable-dialog-title'
           className='headerDialog'
         >
-          {dialogText} Country
+          {dialogText} District
         </DialogTitle>
         <DialogContent>
+          <Autocomplete
+            options={countriesList}
+            getOptionLabel={(option: any) => option.countryName}
+            noOptionsText={'There is no option available.'}
+            id='cbxCountry'
+            value={country}
+            onChange={handleSelectCountry}
+            disableClearable
+            fullWidth
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label='Country'
+                required
+                id='country'
+                name='country'
+              />
+            )}
+          />
+
+          <Autocomplete
+            sx={{ marginTop: '16px'}}
+            options={regionsList}
+            getOptionLabel={(option: any) =>
+              toUpperCamelCase(option.regionName)
+            }
+            noOptionsText={'There is no option available.'}
+            id='cbxRegion'
+            value={region}
+            onChange={handleSelectRegion}
+            disableClearable
+            fullWidth
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label='Region'
+                required
+                id='region'
+                name='region'
+              />
+            )}
+          />
+
           <TextField
-            error={countryNameExists}
-            helperText={countryNameExists ? 'Country already exists' : ''}
-            value={countryName}
+            error={districtNameExists}
+            helperText={districtNameExists ? 'District already exists' : ''}
+            value={districtName}
             margin='normal'
             type='text'
             required
             fullWidth
-            id='countryName'
-            label='Country Name'
-            name='countryName'
+            id='districtName'
+            label='District Name'
+            name='districtName'
             onChange={(e) => {
               onChangeValue(e)
             }}
@@ -333,7 +495,9 @@ const CountriesDatagrid = () => {
             onClick={() => {
               sendData()
             }}
-            disabled={countryName.length <= 0}
+            disabled={
+              districtName.length <= 0 || countryId <= 0 || regionId <= 0
+            }
             variant='contained'
             color='success'
           >
@@ -353,4 +517,4 @@ const CountriesDatagrid = () => {
   )
 }
 
-export default CountriesDatagrid
+export default DistrictsDatagrid

@@ -6,7 +6,7 @@ import axios, { AxiosResponse } from 'axios'
 export class SVCHome {
   public static async GetCountries(): Promise<IServiceResult<any>> {
     let _route: string = con.ReturnRoute()
-    const url: string = _route + 'Home/GetAllCountries'
+    const url: string = _route + 'SettingsMaintenance/GetAllCountries'
     let sr: ServiceResult<any> = new ServiceResult<any>()
     sr.errorMessage = 'Initializing'
     await axios
@@ -26,7 +26,7 @@ export class SVCHome {
 
   public static async GetRegions(): Promise<IServiceResult<any>> {
     let _route: string = con.ReturnRoute()
-    const url: string = _route + 'Home/GetAllRegions'
+    const url: string = _route + 'SettingsMaintenance/GetAllRegions'
     let sr: ServiceResult<any> = new ServiceResult<any>()
     sr.errorMessage = 'Initializing'
     await axios
@@ -46,7 +46,7 @@ export class SVCHome {
 
   public static async GetDistricts(): Promise<IServiceResult<any>> {
     let _route: string = con.ReturnRoute()
-    const url: string = _route + 'Home/GetAllDistricts'
+    const url: string = _route + 'SettingsMaintenance/GetAllDistricts'
     let sr: ServiceResult<any> = new ServiceResult<any>()
     sr.errorMessage = 'Initializing'
     await axios

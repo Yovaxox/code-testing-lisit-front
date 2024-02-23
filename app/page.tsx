@@ -66,6 +66,9 @@ export default function SignIn() {
       setIsLoading(false)
       if (!error) {
         setUpdate(!update)
+        const userData = data.result.data
+        localStorage.setItem('userData', JSON.stringify(userData.data))
+        localStorage.setItem('token', userData.token)
         window.location.href = '/program-assignment'
       } else {
         const result = data.response.data

@@ -21,11 +21,11 @@ import React from 'react'
 import Datagrid from '@/components/datagrid'
 import { DeleteConfirm, OperationAlert } from '@/components/alert'
 import Loader from '@/components/loader'
-import { GetCountriesLogic } from '@/presentation/view-model/Home.logic'
+import { GetProgramsLogic } from '@/presentation/view-model/SettingsMaintenance.logic'
 import {
-  CreateCountryLogic,
-  DeleteCountryLogic,
-  UpdateCountryLogic,
+  CreateProgramLogic,
+  DeleteProgramLogic,
+  UpdateProgramLogic,
 } from '@/presentation/view-model/SettingsMaintenance.logic'
 
 function PaperComponent(props: PaperProps) {
@@ -48,15 +48,15 @@ const CountriesDatagrid = () => {
   const height = 620
 
   const [list, setList] = useState([])
-  const [countryId, setCountryId] = useState(0)
-  const [countryName, setCountryName] = useState('')
-  const [countryNameExists, setCountryNameExists] = useState(false)
+  const [programId, setProgramId] = useState(0)
+  const [programName, setProgramName] = useState('')
+  const [programNameExists, setProgramNameExists] = useState(false)
 
   const columnList: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 80 },
     {
-      field: 'countryName',
-      headerName: 'Country Name',
+      field: 'programName',
+      headerName: 'Program Name',
       width: 200,
       flex: 1,
       align: 'center',
@@ -111,15 +111,14 @@ const CountriesDatagrid = () => {
     switch (accion) {
       case 'Update':
         handleClickOpen('Update')
-        setCountryName(data.countryName)
-        setCountryId(data.id)
+        setProgramName(data.programName)
+        setProgramId(data.id)
         break
       case 'Delete':
-        // Create Delete component alert
-        DeleteConfirm('Country ' + data.countryName + ' will be deleted.').then(
+        DeleteConfirm('Program ' + data.programName + ' will be deleted.').then(
           (confirm: any) => {
             if (confirm) {
-              DeleteCountryLogic(DeleteCountryCallBack, parseInt(data.id));
+              DeleteProgramLogic(DeleteProgramCallBack, parseInt(data.id));
             }
           }
         )
@@ -127,7 +126,7 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const DeleteCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const DeleteProgramCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -158,8 +157,8 @@ const CountriesDatagrid = () => {
   }
 
   const clear = () => {
-    setCountryName('')
-    setCountryId(0)
+    setProgramName('')
+    setProgramId(0)
   }
 
   const handleCellClick = (param: any, event: any) => {
@@ -178,9 +177,9 @@ const CountriesDatagrid = () => {
     let id = e.target.id
     let value = e.target.value
     switch (id) {
-      case 'countryName':
+      case 'programName':
         if (value.length <= 50) {
-          setCountryName(value)
+          setProgramName(value)
         }
         break
     }
@@ -191,12 +190,12 @@ const CountriesDatagrid = () => {
     let data = {}
     if (optionAPI == 1) {
       data = {
-        countryName,
+        programName,
       }
     } else {
       data = {
-        id: countryId,
-        countryName,
+        id: programId,
+        programName,
       }
     }
     handleClose()
@@ -207,13 +206,13 @@ const CountriesDatagrid = () => {
   const CreateOrUpdate = (option: number, data: any) => {
     setIsLoading(true)
     if (option === 1) {
-      CreateCountryLogic(CreateCountryCallBack, data)
+      CreateProgramLogic(CreateProgramCallBack, data)
     } else {
-      UpdateCountryLogic(UpdateCountryCallBack, data)
+      UpdateProgramLogic(UpdateProgramCallBack, data)
     }
   }
 
-  const CreateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const CreateProgramCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -228,7 +227,7 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const UpdateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const UpdateProgramCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -245,10 +244,10 @@ const CountriesDatagrid = () => {
 
   useEffect(() => {
     setIsLoading(true)
-    GetCountriesLogic(GetCountriesCallBack)
+    GetProgramsLogic(GetProgramsCallBack)
   }, [update])
 
-  const GetCountriesCallBack = (error: Boolean, err: string, data: any) => {
+  const GetProgramsCallBack = (error: Boolean, err: string, data: any) => {
     let newData = data
     setIsLoading(false)
     try {
@@ -263,18 +262,35 @@ const CountriesDatagrid = () => {
   return (
     <div>
       <Loader open={isLoading} />
+
       <Fade in={true} unmountOnExit timeout={300}>
         <Container maxWidth={false}>
           <Grid container spacing={0}>
-            <Grid item xs={9}></Grid>
-            <Grid item xs={3} container direction='row' justifyContent='end'>
+            <Grid item xs={3}></Grid>
+            <Grid item xs={9} container direction='row' justifyContent='end'>
               <Button
                 variant='contained'
                 endIcon={<AddIcon />}
                 onClick={() => handleClickOpen('Create')}
                 sx={{ marginBottom: '1rem' }}
               >
-                Create
+                Create Country Program
+              </Button>
+              <Button
+                variant='contained'
+                endIcon={<AddIcon />}
+                onClick={() => handleClickOpen('Create')}
+                sx={{ marginBottom: '1rem', marginLeft: '1rem' }}
+              >
+                Create Region Program
+              </Button>
+              <Button
+                variant='contained'
+                endIcon={<AddIcon />}
+                onClick={() => handleClickOpen('Create')}
+                sx={{ marginBottom: '1rem', marginLeft: '1rem' }}
+              >
+                Create District Program
               </Button>
             </Grid>
           </Grid>
@@ -306,20 +322,20 @@ const CountriesDatagrid = () => {
           id='draggable-dialog-title'
           className='headerDialog'
         >
-          {dialogText} Country
+          {dialogText} Program
         </DialogTitle>
         <DialogContent>
           <TextField
-            error={countryNameExists}
-            helperText={countryNameExists ? 'Country already exists' : ''}
-            value={countryName}
+            error={programNameExists}
+            helperText={programNameExists ? 'Program already exists' : ''}
+            value={programName}
             margin='normal'
             type='text'
             required
             fullWidth
-            id='countryName'
-            label='Country Name'
-            name='countryName'
+            id='programName'
+            label='Program Name'
+            name='programName'
             onChange={(e) => {
               onChangeValue(e)
             }}
@@ -333,7 +349,7 @@ const CountriesDatagrid = () => {
             onClick={() => {
               sendData()
             }}
-            disabled={countryName.length <= 0}
+            disabled={programName.length <= 0}
             variant='contained'
             color='success'
           >

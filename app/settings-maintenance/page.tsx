@@ -7,6 +7,9 @@ import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import CountriesDatagrid from '@/components/countries-datagrid'
+import RegionsDatagrid from '@/components/regions-datagrid'
+import DistrictsDatagrid from '@/components/districts-datagrid'
+import ProgramsDatagrid from '@/components/programs-datagrid'
 
 const SettingsMaintenance = () => {
   const [value, setValue] = React.useState('1')
@@ -40,12 +43,18 @@ const SettingsMaintenance = () => {
                 <Tab label='Districts' value='4' />
               </TabList>
             </Box>
-            <TabPanel value='1'>{/* <CountriesDatagrid /> */}</TabPanel>
+            <TabPanel value='1'>
+              <ProgramsDatagrid />
+            </TabPanel>
             <TabPanel value='2'>
               <CountriesDatagrid />
             </TabPanel>
-            <TabPanel value='3'>{/* <CountriesDatagrid /> */}</TabPanel>
-            <TabPanel value='4'>{/* <CountriesDatagrid /> */}</TabPanel>
+            <TabPanel value='3'>
+              <RegionsDatagrid />
+            </TabPanel>
+            <TabPanel value='4'>
+              <DistrictsDatagrid />
+            </TabPanel>
           </TabContext>
         </Box>
       </div>

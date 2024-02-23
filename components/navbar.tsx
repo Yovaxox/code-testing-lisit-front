@@ -13,9 +13,10 @@ import Button from '@mui/material/Button'
 import Tooltip from '@mui/material/Tooltip'
 import MenuItem from '@mui/material/MenuItem'
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism'
-import { SignpostOutlined } from '@mui/icons-material'
+import { useEffect, useState } from 'react'
+import { CheckSecurityLogic } from '@/presentation/view-model/Security.logic'
+import Loader from './loader'
 
-const pages = [{ name: 'Program Assignment', url: '/program-assignment' }, { name: 'User activity', url: '/user-activity' }, { name: 'Settings & Maintenance', url: '/settings-maintenance' }]
 const settings = ['Sign out']
 
 function Navbar() {
@@ -23,6 +24,13 @@ function Navbar() {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   )
+  const [userData, setUserData] = useState({
+    id: 0,
+    firstName: '',
+    lastName: '',
+  })
+  const [pages, setPages] = useState([{}])
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget)
@@ -39,13 +47,46 @@ function Navbar() {
     setAnchorElUser(null)
   }
 
+  useEffect(() => {
+    const storedData = localStorage.getItem('userData')
+    const token = localStorage.getItem('token')
+    if (storedData) {
+      setUserData(JSON.parse(storedData))
+    }
+    setIsLoading(true)
+    CheckSecurityLogic(CheckSecurityCallBack, token)
+  }, [])
+
+  const CheckSecurityCallBack = async (error: Boolean, err: any, data: any) => {
+    setIsLoading(false)
+    try {
+      if (!error) {
+        const userRole = data.result.data.data.userRole
+        if (userRole === 'Admin') {
+          setPages([
+            { name: 'Program Assignment', url: '/program-assignment' },
+            { name: 'User activity', url: '/user-activity' },
+            { name: 'Settings & Maintenance', url: '/settings-maintenance' },
+          ])
+        } else {
+          setPages([{ name: 'My Programs', url: '/my-programs' }])
+        }
+      } else {
+        window.location.href = '/'
+      }
+    } catch (er) {
+      window.location.href = '/'
+    }
+  }
+
   const signOut = () => {
-    //TODO: Delete local storage and redirect to login page
+    localStorage.clear()
     window.location.href = '/'
   }
 
   return (
     <AppBar position='static'>
+      <Loader open={isLoading} />
       <Container maxWidth='xl'>
         <Toolbar disableGutters>
           <VolunteerActivismIcon
@@ -98,7 +139,7 @@ function Navbar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
+              {pages.map((page: any) => (
                 <MenuItem
                   key={page.name}
                   onClick={handleCloseNavMenu}
@@ -133,7 +174,7 @@ function Navbar() {
             THE LAST BUG
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+            {pages.map((page: any) => (
               <Button
                 key={page.name}
                 onClick={handleCloseNavMenu}
@@ -151,12 +192,14 @@ function Navbar() {
             ))}
           </Box>
 
-          <Typography marginRight={'15px'}>Welcome, USER</Typography>
+          <Typography marginRight={'15px'}>
+            Welcome, {`${userData.firstName} ${userData.lastName}`}
+          </Typography>
 
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title='Open settings'>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt='Remy Sharp' src='/static/images/avatar/2.jpg' />
+                <Avatar src='/broken-image.jpg' />
               </IconButton>
             </Tooltip>
             <Menu

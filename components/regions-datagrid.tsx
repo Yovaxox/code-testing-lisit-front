@@ -10,6 +10,7 @@ import {
   Grid,
   Container,
   Fade,
+  Autocomplete,
 } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
@@ -21,11 +22,14 @@ import React from 'react'
 import Datagrid from '@/components/datagrid'
 import { DeleteConfirm, OperationAlert } from '@/components/alert'
 import Loader from '@/components/loader'
-import { GetCountriesLogic } from '@/presentation/view-model/Home.logic'
 import {
-  CreateCountryLogic,
-  DeleteCountryLogic,
-  UpdateCountryLogic,
+  GetCountriesLogic,
+  GetRegionsLogic,
+} from '@/presentation/view-model/Home.logic'
+import {
+  CreateRegionLogic,
+  DeleteRegionLogic,
+  UpdateRegionLogic,
 } from '@/presentation/view-model/SettingsMaintenance.logic'
 
 function PaperComponent(props: PaperProps) {
@@ -39,7 +43,7 @@ function PaperComponent(props: PaperProps) {
   )
 }
 
-const CountriesDatagrid = () => {
+const RegionsDatagrid = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [dialogText, setDialogText] = useState('')
   const [optionAPI, setOptionAPI] = useState(0)
@@ -48,9 +52,13 @@ const CountriesDatagrid = () => {
   const height = 620
 
   const [list, setList] = useState([])
+  const [regionId, setRegionId] = useState(0)
+  const [regionName, setRegionName] = useState('')
+  const [regionNameExists, setRegionNameExists] = useState(false)
+
+  const [countriesList, setCountriesList] = useState([])
+  const [country, setCountry] = useState(null)
   const [countryId, setCountryId] = useState(0)
-  const [countryName, setCountryName] = useState('')
-  const [countryNameExists, setCountryNameExists] = useState(false)
 
   const columnList: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 80 },
@@ -61,6 +69,12 @@ const CountriesDatagrid = () => {
       flex: 1,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'regionName',
+      headerName: 'Region Name',
+      width: 200,
+      flex: 1,
     },
     {
       field: 'Update',
@@ -110,16 +124,20 @@ const CountriesDatagrid = () => {
 
     switch (accion) {
       case 'Update':
+        const dataCountry: any = {id: data.countryId, countryName: data.countryName}      
+
         handleClickOpen('Update')
-        setCountryName(data.countryName)
-        setCountryId(data.id)
+        setRegionName(data.regionName)
+        setRegionId(data.id)
+        setCountry(dataCountry)
+        setCountryId(data.countryId)
         break
       case 'Delete':
         // Create Delete component alert
-        DeleteConfirm('Country ' + data.countryName + ' will be deleted.').then(
+        DeleteConfirm('Region ' + data.regionName + ' will be deleted.').then(
           (confirm: any) => {
             if (confirm) {
-              DeleteCountryLogic(DeleteCountryCallBack, parseInt(data.id));
+              DeleteRegionLogic(DeleteRegionCallBack, parseInt(data.id))
             }
           }
         )
@@ -127,7 +145,7 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const DeleteCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const DeleteRegionCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -158,7 +176,9 @@ const CountriesDatagrid = () => {
   }
 
   const clear = () => {
-    setCountryName('')
+    setRegionName('')
+    setRegionId(0)
+    setCountry(null)
     setCountryId(0)
   }
 
@@ -178,9 +198,9 @@ const CountriesDatagrid = () => {
     let id = e.target.id
     let value = e.target.value
     switch (id) {
-      case 'countryName':
+      case 'regionName':
         if (value.length <= 50) {
-          setCountryName(value)
+          setRegionName(value)
         }
         break
     }
@@ -191,12 +211,14 @@ const CountriesDatagrid = () => {
     let data = {}
     if (optionAPI == 1) {
       data = {
-        countryName,
+        regionName,
+        countryId,
       }
     } else {
       data = {
-        id: countryId,
-        countryName,
+        id: regionId,
+        regionName,
+        countryId,
       }
     }
     handleClose()
@@ -207,13 +229,13 @@ const CountriesDatagrid = () => {
   const CreateOrUpdate = (option: number, data: any) => {
     setIsLoading(true)
     if (option === 1) {
-      CreateCountryLogic(CreateCountryCallBack, data)
+      CreateRegionLogic(CreateRegionCallBack, data)
     } else {
-      UpdateCountryLogic(UpdateCountryCallBack, data)
+      UpdateRegionLogic(UpdateRegionCallBack, data)
     }
   }
 
-  const CreateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const CreateRegionCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -228,7 +250,7 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const UpdateCountryCallBack = async (error: Boolean, err: any, data: any) => {
+  const UpdateRegionCallBack = async (error: Boolean, err: any, data: any) => {
     try {
       setIsLoading(false)
       if (!error) {
@@ -246,9 +268,22 @@ const CountriesDatagrid = () => {
   useEffect(() => {
     setIsLoading(true)
     GetCountriesLogic(GetCountriesCallBack)
+    GetRegionsLogic(GetRegionsCallBack)
   }, [update])
 
   const GetCountriesCallBack = (error: Boolean, err: string, data: any) => {
+    let newData = data
+    setIsLoading(false)
+    try {
+      if (error === false && data.length > 0) {
+        setCountriesList(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
+  }
+
+  const GetRegionsCallBack = (error: Boolean, err: string, data: any) => {
     let newData = data
     setIsLoading(false)
     try {
@@ -257,6 +292,15 @@ const CountriesDatagrid = () => {
       }
     } catch (er) {
       OperationAlert(false)
+    }
+  }
+
+  const handleSelectCountry = (e: any, newValue: any) => {
+    if (newValue !== null) {
+      const countryId = newValue.id
+      // Set the country id and the country in Autocomplete component
+      setCountryId(countryId)
+      setCountry(newValue)
     }
   }
 
@@ -306,20 +350,40 @@ const CountriesDatagrid = () => {
           id='draggable-dialog-title'
           className='headerDialog'
         >
-          {dialogText} Country
+          {dialogText} Region
         </DialogTitle>
         <DialogContent>
+          <Autocomplete
+            options={countriesList}
+            getOptionLabel={(option: any) => option.countryName}
+            noOptionsText={'There is no option available.'}
+            id='cbxCountry'
+            value={country}
+            onChange={handleSelectCountry}
+            disableClearable
+            fullWidth
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label='Country'
+                required
+                id='country'
+                name='country'
+              />
+            )}
+          />
+
           <TextField
-            error={countryNameExists}
-            helperText={countryNameExists ? 'Country already exists' : ''}
-            value={countryName}
+            error={regionNameExists}
+            helperText={regionNameExists ? 'Region already exists' : ''}
+            value={regionName}
             margin='normal'
             type='text'
             required
             fullWidth
-            id='countryName'
-            label='Country Name'
-            name='countryName'
+            id='regionName'
+            label='Region Name'
+            name='regionName'
             onChange={(e) => {
               onChangeValue(e)
             }}
@@ -333,7 +397,7 @@ const CountriesDatagrid = () => {
             onClick={() => {
               sendData()
             }}
-            disabled={countryName.length <= 0}
+            disabled={regionName.length <= 0 || countryId <= 0}
             variant='contained'
             color='success'
           >
@@ -353,4 +417,4 @@ const CountriesDatagrid = () => {
   )
 }
 
-export default CountriesDatagrid
+export default RegionsDatagrid
