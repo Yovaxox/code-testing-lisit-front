@@ -10,6 +10,7 @@ import {
   Grid,
   Container,
   Fade,
+  Autocomplete,
 } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
@@ -19,7 +20,7 @@ import { useEffect, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import React from 'react'
 import Datagrid from '@/components/datagrid'
-import { DeleteConfirm, OperationAlert } from '@/components/alert'
+import { DeleteConfirm, OperationAlert, OperationAlertProgram } from '@/components/alert'
 import Loader from '@/components/loader'
 import { GetProgramsLogic } from '@/presentation/view-model/SettingsMaintenance.logic'
 import {
@@ -27,6 +28,13 @@ import {
   DeleteProgramLogic,
   UpdateProgramLogic,
 } from '@/presentation/view-model/SettingsMaintenance.logic'
+import {
+  GetCountriesLogic,
+  GetDistrictsLogic,
+  GetRegionsLogic,
+} from '@/presentation/view-model/Home.logic'
+import toUpperCamelCase from '@/utils/toUpperCamelCase'
+import ProgramsForm from './programs-form'
 
 function PaperComponent(props: PaperProps) {
   return (
@@ -43,9 +51,17 @@ const CountriesDatagrid = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [dialogText, setDialogText] = useState('')
   const [optionAPI, setOptionAPI] = useState(0)
+  const [optionType, setOptionType] = useState('')
   const [update, setUpdate] = useState(false)
   const [open, setOpen] = useState(false)
   const height = 620
+
+  const [countryId, setCountryId] = useState(0)
+  const [country, setCountry] = useState(null)
+  const [regionId, setRegionId] = useState(0)
+  const [region, setRegion] = useState(null)
+  const [districtId, setDistrictId] = useState(0)
+  const [district, setDistrict] = useState(null)
 
   const [list, setList] = useState([])
   const [programId, setProgramId] = useState(0)
@@ -55,12 +71,30 @@ const CountriesDatagrid = () => {
   const columnList: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 80 },
     {
-      field: 'programName',
-      headerName: 'Program Name',
+      field: 'countryName',
+      headerName: 'Country Name',
       width: 200,
       flex: 1,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'regionName',
+      headerName: 'Region Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'districtName',
+      headerName: 'District Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'programName',
+      headerName: 'Program Name',
+      width: 200,
+      flex: 1,
     },
     {
       field: 'Update',
@@ -110,7 +144,30 @@ const CountriesDatagrid = () => {
 
     switch (accion) {
       case 'Update':
-        handleClickOpen('Update')
+        const dataCountry: any = {
+          id: data.countryId,
+          countryName: data.countryName,
+        }
+        const dataRegion: any = {
+          id: data.regionId,
+          regionName: data.regionName,
+        }
+        const dataDistrict: any = {
+          id: data.districtId,
+          districtName: data.districtName,
+        }
+
+        handleClickOpen('Update', 'District')
+
+        setCountry(dataCountry)
+        setCountryId(data.countryId)
+
+        setRegion(dataRegion)
+        setRegionId(data.regionId)
+
+        setDistrict(dataDistrict)
+        setDistrictId(data.districtId)
+
         setProgramName(data.programName)
         setProgramId(data.id)
         break
@@ -118,7 +175,7 @@ const CountriesDatagrid = () => {
         DeleteConfirm('Program ' + data.programName + ' will be deleted.').then(
           (confirm: any) => {
             if (confirm) {
-              DeleteProgramLogic(DeleteProgramCallBack, parseInt(data.id));
+              DeleteProgramLogic(DeleteProgramCallBack, parseInt(data.id))
             }
           }
         )
@@ -141,22 +198,33 @@ const CountriesDatagrid = () => {
     }
   }
 
-  const handleClickOpen = (action: string) => {
+  const handleClickOpen = (action: string, type: string) => {
     switch (action) {
       case 'Create':
-        setDialogText('Create')
+        setDialogText(`${action} ${type}`)
         setOptionAPI(1)
+        setOptionType(type)
         clear()
         break
       case 'Update':
-        setDialogText('Update')
+        setDialogText(`${action} ${type}`)
         setOptionAPI(2)
+        setOptionType(type)
         break
     }
     setOpen(true)
   }
 
   const clear = () => {
+    setCountry(null)
+    setCountryId(0)
+
+    setRegion(null) 
+    setRegionId(0)
+
+    setDistrict(null)
+    setDistrictId(0)
+    
     setProgramName('')
     setProgramId(0)
   }
@@ -188,15 +256,49 @@ const CountriesDatagrid = () => {
   // Option 1 = Create, Option 2 = Update
   const sendData = () => {
     let data = {}
-    if (optionAPI == 1) {
-      data = {
-        programName,
-      }
-    } else {
-      data = {
-        id: programId,
-        programName,
-      }
+    switch (optionType) {
+      case 'Country':
+        if (optionAPI == 1) {
+          data = {
+            countryId,
+            programName,
+          }
+        } else {
+          data = {
+            id: programId,
+            countryId,
+            programName,
+          }
+        }
+        break
+      case 'Region':
+        if (optionAPI == 1) {
+          data = {
+            regionId,
+            programName,
+          }
+        } else {
+          data = {
+            id: programId,
+            regionId,
+            programName,
+          }
+        }
+        break
+      case 'District':
+        if (optionAPI == 1) {
+          data = {
+            districtId,
+            programName,
+          }
+        } else {
+          data = {
+            id: programId,
+            districtId,
+            programName,
+          }
+          break
+        }
     }
     handleClose()
     CreateOrUpdate(optionAPI, data)
@@ -206,7 +308,7 @@ const CountriesDatagrid = () => {
   const CreateOrUpdate = (option: number, data: any) => {
     setIsLoading(true)
     if (option === 1) {
-      CreateProgramLogic(CreateProgramCallBack, data)
+      CreateProgramLogic(CreateProgramCallBack, data, optionType)
     } else {
       UpdateProgramLogic(UpdateProgramCallBack, data)
     }
@@ -217,7 +319,9 @@ const CountriesDatagrid = () => {
       setIsLoading(false)
       if (!error) {
         setUpdate(!update)
-        await OperationAlert(true)
+        const alertType = data.result.data.data.alertType
+        const message = data.result.data.data.message
+        await OperationAlertProgram(true, message,alertType)
       } else {
         const result = data.response.data
         OperationAlert(false, result.message)
@@ -259,6 +363,18 @@ const CountriesDatagrid = () => {
     }
   }
 
+  const callBackCountry = (countryId: number) => {
+    setCountryId(countryId)
+  }
+
+  const callBackRegion = (regionId: number) => {
+    setRegionId(regionId)
+  }
+
+  const callBackDistrict = (districtId: number) => {
+    setDistrictId(districtId)
+  }
+
   return (
     <div>
       <Loader open={isLoading} />
@@ -271,7 +387,7 @@ const CountriesDatagrid = () => {
               <Button
                 variant='contained'
                 endIcon={<AddIcon />}
-                onClick={() => handleClickOpen('Create')}
+                onClick={() => handleClickOpen('Create', 'Country')}
                 sx={{ marginBottom: '1rem' }}
               >
                 Create Country Program
@@ -279,7 +395,7 @@ const CountriesDatagrid = () => {
               <Button
                 variant='contained'
                 endIcon={<AddIcon />}
-                onClick={() => handleClickOpen('Create')}
+                onClick={() => handleClickOpen('Create', 'Region')}
                 sx={{ marginBottom: '1rem', marginLeft: '1rem' }}
               >
                 Create Region Program
@@ -287,7 +403,7 @@ const CountriesDatagrid = () => {
               <Button
                 variant='contained'
                 endIcon={<AddIcon />}
-                onClick={() => handleClickOpen('Create')}
+                onClick={() => handleClickOpen('Create', 'District')}
                 sx={{ marginBottom: '1rem', marginLeft: '1rem' }}
               >
                 Create District Program
@@ -325,6 +441,20 @@ const CountriesDatagrid = () => {
           {dialogText} Program
         </DialogTitle>
         <DialogContent>
+
+          <ProgramsForm
+            type={optionType}
+            callBackCountry={callBackCountry}
+            callBackRegion={callBackRegion}
+            callBackDistrict={callBackDistrict}
+            country={country}
+            region={region}
+            district={district}
+            countryId={countryId}
+            regionId={regionId}
+            districtId={districtId}
+          />
+
           <TextField
             error={programNameExists}
             helperText={programNameExists ? 'Program already exists' : ''}

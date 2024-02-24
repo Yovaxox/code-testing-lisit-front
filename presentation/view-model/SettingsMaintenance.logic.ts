@@ -62,8 +62,8 @@ export const GetProgramsLogic = (GetProgramsCallBack: any) => {
   return GetPrograms(GetProgramsCallBack)
 }
 
-export const CreateProgramLogic = (CreateProgramCallBack: any, data: any) => {
-  return CreateProgram(CreateProgramCallBack, data)
+export const CreateProgramLogic = (CreateProgramCallBack: any, data: any, optionType: string) => {
+  return CreateProgram(CreateProgramCallBack, data, optionType)
 }
 
 export const UpdateProgramLogic = (UpdateProgramCallBack: any, data: any) => {

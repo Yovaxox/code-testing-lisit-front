@@ -11,6 +11,7 @@ import {
   Container,
   Fade,
   Autocomplete,
+  Typography,
 } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 import ModeEditIcon from '@mui/icons-material/ModeEdit'
@@ -23,16 +24,20 @@ import Datagrid from '@/components/datagrid'
 import { DeleteConfirm, OperationAlert } from '@/components/alert'
 import Loader from '@/components/loader'
 import {
-  GetCountriesLogic,
-  GetDistrictsLogic,
-  GetRegionsLogic,
-} from '@/presentation/view-model/Home.logic'
+  GetAssignedProgramsLogic,
+  GetMyAssignedProgramsLogic,
+  GetUsersLogic,
+} from '@/presentation/view-model/AssignedProgram.logic'
 import {
-  CreateDistrictLogic,
-  DeleteDistrictLogic,
-  UpdateDistrictLogic,
-} from '@/presentation/view-model/SettingsMaintenance.logic'
+  CreateAssignedProgramLogic,
+  DeleteAssignedProgramLogic,
+  UpdateAssignedProgramLogic,
+} from '@/presentation/view-model/AssignedProgram.logic'
 import toUpperCamelCase from '@/utils/toUpperCamelCase'
+import { serialize } from 'v8'
+import { GetPrograms } from '@/application/interactors/SettingsMaintenance'
+import { GetProgramsLogic } from '@/presentation/view-model/SettingsMaintenance.logic'
+import { parse } from 'path'
 
 function PaperComponent(props: PaperProps) {
   return (
@@ -45,7 +50,7 @@ function PaperComponent(props: PaperProps) {
   )
 }
 
-const DistrictsDatagrid = () => {
+const AssignedProgramsDatagrid = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [dialogText, setDialogText] = useState('')
   const [optionAPI, setOptionAPI] = useState(0)
@@ -54,38 +59,49 @@ const DistrictsDatagrid = () => {
   const height = 620
 
   const [list, setList] = useState([])
-  const [districtId, setDistrictId] = useState(0)
-  const [districtName, setDistrictName] = useState('')
-  const [districtNameExists, setDistrictNameExists] = useState(false)
 
-  const [regionsListAll, setRegionsListAll] = useState([])
-  const [regionsList, setRegionList] = useState([])
-  const [region, setRegion] = useState(null)
-  const [regionId, setRegionId] = useState(0)
+  const [usersList, setUsersList] = useState([])
+  const [user, setUser] = useState(null)
+  const [userId, setUserId] = useState(0)
 
-  const [countriesList, setCountriesList] = useState([])
-  const [country, setCountry] = useState(null)
-  const [countryId, setCountryId] = useState(0)
+  const [programsListAll, setProgramsListAll] = useState([])
+  const [programsList, setProgramsList] = useState([])
+  const [program, setProgram] = useState(null)
+  const [programId, setProgramId] = useState(0)
+
+  const [assignerId, setAssignerId] = useState(0)
+
+  const [year, setYear] = useState('')
+
+  const [assignedProgramId, setAssignedProgramId] = useState(0)
+
+  const [userTypeId, setUserTypeId] = useState(0)
 
   const columnList: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 80 },
     {
-      field: 'countryName',
-      headerName: 'Country Name',
+      field: 'userName',
+      headerName: 'User Name',
       width: 200,
       flex: 1,
       align: 'center',
       headerAlign: 'center',
     },
     {
-      field: 'regionName',
-      headerName: 'Region Name',
+      field: 'programName',
+      headerName: 'Program Name',
       width: 200,
       flex: 1,
     },
     {
-      field: 'districtName',
-      headerName: 'District Name',
+      field: 'assignerName',
+      headerName: 'Assigner Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'year',
+      headerName: 'Assigned Year',
       width: 200,
       flex: 1,
     },
@@ -131,52 +147,88 @@ const DistrictsDatagrid = () => {
     },
   ]
 
+  const columnListUser: GridColDef[] = [
+    { field: 'id', headerName: 'ID', width: 80 },
+    {
+      field: 'userName',
+      headerName: 'User Name',
+      width: 200,
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'programName',
+      headerName: 'Program Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'assignerName',
+      headerName: 'Assigner Name',
+      width: 200,
+      flex: 1,
+    },
+    {
+      field: 'year',
+      headerName: 'Assigned Year',
+      width: 200,
+      flex: 1,
+    }
+  ]
+
   const handleClick = (event: any, cellValues: any) => {
     let data = cellValues.row
     let accion = cellValues.field
 
     switch (accion) {
       case 'Update':
-        const dataCountry: any = {
-          id: data.countryId,
-          countryName: data.countryName,
-        }
-        const dataRegion: any = {
-          id: data.regionId,
-          regionName: data.regionName,
+        const dataUser: any = {
+          id: data.userId,
+          firstName: data.userName,
+          lastName: '',
         }
 
-        const filteredRegions = regionsListAll.filter(
-          (e: any) => e.countryId == data.countryId
-        )
-        setRegionList(filteredRegions)
+        const dataProgram: any = {
+          id: data.programId,
+          programName: data.programName,
+        }
 
         handleClickOpen('Update')
 
-        setDistrictName(data.districtName)
-        setDistrictId(data.id)
+        setAssignedProgramId(data.id)
 
-        setRegion(dataRegion)
-        setRegionId(data.regionId)
+        setUser(dataUser)
+        setUserId(data.userId)
 
+        setProgram(dataProgram)
+        setProgramId(data.programId)
 
-        setCountry(dataCountry)
-        setCountryId(data.countryId)
+        // Assigner Id is not being used in the form, because it's already implemented from localstorage
+
+        setYear(data.year)
+
+        const filteredPrograms = programsListAll.filter(
+          (e: any) => e.districtId == data.districtId
+        )
+        setProgramsList(filteredPrograms)
         break
       case 'Delete':
-        // Create Delete component alert
         DeleteConfirm(
-          'District ' + data.districtName + ' will be deleted.'
+          'The program assigned for ' + data.userName + ' will be deleted.'
         ).then((confirm: any) => {
           if (confirm) {
-            DeleteDistrictLogic(DeleteDistrictCallBack, parseInt(data.id))
+            DeleteAssignedProgramLogic(
+              DeleteAssignedProgramCallBack,
+              parseInt(data.id)
+            )
           }
         })
         break
     }
   }
 
-  const DeleteDistrictCallBack = async (
+  const DeleteAssignedProgramCallBack = async (
     error: Boolean,
     err: any,
     data: any
@@ -211,16 +263,17 @@ const DistrictsDatagrid = () => {
   }
 
   const clear = () => {
-    setDistrictName('')
-    setDistrictId(0)
+    setUser(null)
+    setUserId(0)
 
-    setRegion(null)
-    setRegionId(0)
+    setProgram(null)
+    setProgramId(0)
 
-    setCountry(null)
-    setCountryId(0)
+    setAssignedProgramId(0)
 
-    setRegionList([])
+    setYear('')
+
+    setProgramsList([])
   }
 
   const handleCellClick = (param: any, event: any) => {
@@ -239,9 +292,13 @@ const DistrictsDatagrid = () => {
     let id = e.target.id
     let value = e.target.value
     switch (id) {
-      case 'districtName':
-        if (value.length <= 50) {
-          setDistrictName(value)
+      case 'year':
+        // Year should be less than 2100 (just to avoid mistakes)
+        if (
+          (parseInt(value) >= 0 && parseInt(value) <= 2_100) ||
+          value === ''
+        ) {
+          setYear(value)
         }
         break
     }
@@ -252,16 +309,17 @@ const DistrictsDatagrid = () => {
     let data = {}
     if (optionAPI == 1) {
       data = {
-        districtName,
-        regionId,
-        countryId,
+        userId,
+        programId,
+        assignerId,
+        year: year === '' ? 0 : parseInt(year),
       }
     } else {
       data = {
-        id: districtId,
-        districtName,
-        regionId,
-        countryId,
+        id: assignedProgramId,
+        programId,
+        assignerId,
+        year: year === '' ? 0 : parseInt(year),
       }
     }
     handleClose()
@@ -272,13 +330,13 @@ const DistrictsDatagrid = () => {
   const CreateOrUpdate = (option: number, data: any) => {
     setIsLoading(true)
     if (option === 1) {
-      CreateDistrictLogic(CreateDistrictCallBack, data)
+      CreateAssignedProgramLogic(CreateAssignedProgramCallBack, data)
     } else {
-      UpdateDistrictLogic(UpdateDistrictCallBack, data)
+      UpdateAssignedProgramLogic(UpdateAssignedProgramCallBack, data)
     }
   }
 
-  const CreateDistrictCallBack = async (
+  const CreateAssignedProgramCallBack = async (
     error: Boolean,
     err: any,
     data: any
@@ -297,7 +355,7 @@ const DistrictsDatagrid = () => {
     }
   }
 
-  const UpdateDistrictCallBack = async (
+  const UpdateAssignedProgramCallBack = async (
     error: Boolean,
     err: any,
     data: any
@@ -318,36 +376,27 @@ const DistrictsDatagrid = () => {
 
   useEffect(() => {
     setIsLoading(true)
-    GetCountriesLogic(GetCountriesCallBack)
-    GetRegionsLogic(GetRegionsCallBack)
-    GetDistrictsLogic(GetDistrictsCallBack)
+    const storedData = localStorage.getItem('userData')
+    let parsedData: any = { id: 0 }
+    if (storedData) {
+      parsedData = JSON.parse(storedData)
+      setAssignerId(parsedData.id)
+      setUserTypeId(parseInt(parsedData.userTypeId))
+    }
+    if (parsedData.userTypeId === 1) {
+      GetAssignedProgramsLogic(GetAssignedProgramsCallBack)
+    } else {
+      GetMyAssignedProgramsLogic(GetMyAssignedProgramsCallBack, parseInt(parsedData.userTypeId))
+    }
+    GetUsersLogic(GetUsersCallBack)
+    GetProgramsLogic(GetProgramsCallBack)
   }, [update])
 
-  const GetCountriesCallBack = (error: Boolean, err: string, data: any) => {
-    let newData = data
-    setIsLoading(false)
-    try {
-      if (error === false && data.length > 0) {
-        setCountriesList(newData)
-      }
-    } catch (er) {
-      OperationAlert(false)
-    }
-  }
-
-  const GetRegionsCallBack = (error: Boolean, err: string, data: any) => {
-    let newData = data
-    setIsLoading(false)
-    try {
-      if (error === false && data.length > 0) {
-        setRegionsListAll(newData)
-      }
-    } catch (er) {
-      OperationAlert(false)
-    }
-  }
-
-  const GetDistrictsCallBack = (error: Boolean, err: string, data: any) => {
+  const GetAssignedProgramsCallBack = (
+    error: Boolean,
+    err: string,
+    data: any
+  ) => {
     let newData = data
     setIsLoading(false)
     try {
@@ -359,37 +408,78 @@ const DistrictsDatagrid = () => {
     }
   }
 
-  const handleSelectCountry = (e: any, newValue: any) => {
-    if (newValue !== null) {
-      const countryId = newValue.id
-      // Clean the region
-      setRegionId(0)
-      setRegion(null)
-
-      // Set the country id and the country in Autocomplete component
-      setCountryId(countryId)
-      setCountry(newValue)
-
-      // Filter the regions based on the selected country
-      const filteredRegions = regionsListAll.filter(
-        (e: any) => e.countryId == countryId
-      )
-      setRegionList(filteredRegions)
+  const GetMyAssignedProgramsCallBack = (
+    error: Boolean,
+    err: string,
+    data: any
+  ) => {
+    let newData = data.result
+    setIsLoading(false)
+    try {
+      if (error === false && data.result.length > 0) {
+        setList(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
     }
   }
 
-  const handleSelectRegion = (e: any, newValue: any) => {
+  const GetUsersCallBack = (error: Boolean, err: string, data: any) => {
+    let newData = data
+    setIsLoading(false)
+    try {
+      if (error === false && data.length > 0) {
+        setUsersList(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
+  }
+
+  const GetProgramsCallBack = (error: Boolean, err: string, data: any) => {
+    let newData = data
+    setIsLoading(false)
+    try {
+      if (error === false && data.length > 0) {
+        setProgramsListAll(newData)
+      }
+    } catch (er) {
+      OperationAlert(false)
+    }
+  }
+
+  const handleSelectUser = (e: any, newValue: any) => {
     if (newValue !== null) {
-      const regionId = newValue.id
-      // Set the region id and the region in Autocomplete component
-      setRegionId(regionId)
-      setRegion(newValue)
+      const userId = newValue.id
+      const userDistrictId = newValue.districtId
+
+      // Clear the program and programId
+      setProgramId(0)
+      setProgram(null)
+
+      setUserId(userId)
+      setUser(newValue)
+
+      const filteredPrograms = programsListAll.filter(
+        (e: any) => e.districtId == userDistrictId
+      )
+      setProgramsList(filteredPrograms)
+    }
+  }
+
+  const handleSelectProgram = (e: any, newValue: any) => {
+    if (newValue !== null) {
+      const programId = newValue.id
+      setProgramId(programId)
+      setProgram(newValue)
     }
   }
 
   return (
     <div>
       <Loader open={isLoading} />
+
+      {userTypeId === 2 ? <Typography variant='h2' textAlign={'center'} sx={{ marginTop: '1rem' }}>My assigned programs</Typography> :
       <Fade in={true} unmountOnExit timeout={300}>
         <Container maxWidth={false}>
           <Grid container spacing={0}>
@@ -399,21 +489,21 @@ const DistrictsDatagrid = () => {
                 variant='contained'
                 endIcon={<AddIcon />}
                 onClick={() => handleClickOpen('Create')}
-                sx={{ marginBottom: '1rem' }}
+                sx={{ marginBottom: '1rem', marginTop: '1rem' }}
               >
-                Create
+                Assign Program
               </Button>
             </Grid>
           </Grid>
         </Container>
       </Fade>
-
+      }
       <Fade in={true} unmountOnExit timeout={300}>
-        <div>
+        <div style={userTypeId === 2 ? { marginTop: '1rem' } : {}}>
           <Datagrid
             height={height}
             rows={list}
-            columns={columnList}
+            columns={userTypeId === 1 ? columnList : columnListUser}
             rowAutoHeight={false}
             handleCellClick={handleCellClick}
             handleRowClick={handleRowClick}
@@ -433,68 +523,67 @@ const DistrictsDatagrid = () => {
           id='draggable-dialog-title'
           className='headerDialog'
         >
-          {dialogText} District
+          {dialogText} Assigned Program
         </DialogTitle>
         <DialogContent>
+          <Typography>Please assign a Program to a user:</Typography>
           <Autocomplete
-            options={countriesList}
-            getOptionLabel={(option: any) => option.countryName}
+            sx={{ marginTop: '16px' }}
+            options={usersList}
+            getOptionLabel={(option: any) =>
+              `${option.firstName} ${option.lastName}`
+            }
             noOptionsText={'There is no option available.'}
-            id='cbxCountry'
-            value={country}
-            onChange={handleSelectCountry}
+            id='cbxUser'
+            value={user}
+            onChange={handleSelectUser}
             disableClearable
             fullWidth
             renderInput={(params) => (
               <TextField
                 {...params}
-                label='Country'
+                label='User'
                 required
-                id='country'
-                name='country'
+                id='user'
+                name='user'
               />
             )}
           />
 
           <Autocomplete
-            sx={{ marginTop: '16px'}}
-            options={regionsList}
+            sx={{ marginTop: '16px' }}
+            options={programsList}
             getOptionLabel={(option: any) =>
-              toUpperCamelCase(option.regionName)
+              toUpperCamelCase(option.programName)
             }
             noOptionsText={'There is no option available.'}
-            id='cbxRegion'
-            value={region}
-            onChange={handleSelectRegion}
+            id='cbxProgram'
+            value={program}
+            onChange={handleSelectProgram}
             disableClearable
             fullWidth
             renderInput={(params) => (
               <TextField
                 {...params}
-                label='Region'
+                label='Program'
                 required
-                id='region'
-                name='region'
+                id='program'
+                name='program'
               />
             )}
           />
 
           <TextField
-            error={districtNameExists}
-            helperText={districtNameExists ? 'District already exists' : ''}
-            value={districtName}
+            value={year}
             margin='normal'
-            type='text'
+            type='year'
             required
             fullWidth
-            id='districtName'
-            label='District Name'
-            name='districtName'
+            id='year'
+            label='Year of Assignment'
+            name='year'
             onChange={(e) => {
               onChangeValue(e)
-            }}
-            inputProps={{
-              autoComplete: 'off',
             }}
           />
         </DialogContent>
@@ -504,7 +593,7 @@ const DistrictsDatagrid = () => {
               sendData()
             }}
             disabled={
-              districtName.length <= 0 || countryId <= 0 || regionId <= 0
+              userId <= 0 || programId <= 0 || assignerId <= 0 || year === ''
             }
             variant='contained'
             color='success'
@@ -525,4 +614,4 @@ const DistrictsDatagrid = () => {
   )
 }
 
-export default DistrictsDatagrid
+export default AssignedProgramsDatagrid

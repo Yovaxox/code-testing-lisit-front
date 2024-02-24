@@ -69,7 +69,7 @@ function Navbar() {
             { name: 'Settings & Maintenance', url: '/settings-maintenance' },
           ])
         } else {
-          setPages([{ name: 'My Programs', url: '/my-programs' }])
+          setPages([{ name: 'My Programs', url: '/program-assignment' }])
         }
       } else {
         window.location.href = '/'
@@ -138,14 +138,15 @@ function Navbar() {
               sx={{
                 display: { xs: 'block', md: 'none' },
               }}
+              key={'navMenu'}
             >
-              {pages.map((page: any) => (
+              {pages.map((page: any, index) => (
                 <MenuItem
-                  key={page.name}
                   onClick={handleCloseNavMenu}
                   divider
                   component={'a'}
                   href={page.url}
+                  key={index}
                 >
                   <Typography textAlign='center'>{page.name}</Typography>
                 </MenuItem>
@@ -173,10 +174,10 @@ function Navbar() {
           >
             THE LAST BUG
           </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page: any) => (
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }} key={'nav'}>
+            {pages.map((page: any, index) => (
               <Button
-                key={page.name}
+                key={index}
                 onClick={handleCloseNavMenu}
                 sx={{
                   my: 2,

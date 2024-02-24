@@ -146,8 +146,8 @@ export const GetPrograms = (GetProgramsCallBack: any) => {
   })
 }
 
-export const CreateProgram = (CreateProgramCallBack: any, data: any) => {
-SVCSettingsMaintenance.CreateProgram(data).then(
+export const CreateProgram = (CreateProgramCallBack: any, data: any, optionType: string) => {
+SVCSettingsMaintenance.CreateProgram(data, optionType).then(
   (res: IServiceResult<any>) => {
     if (res.result !== undefined) {
       let data: any = res

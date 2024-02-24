@@ -257,10 +257,10 @@ export class SVCSettingsMaintenance {
     return sr
   }
 
-  public static async CreateProgram(data: any): Promise<IServiceResult<any>> {
+  public static async CreateProgram(data: any, optionType: string): Promise<IServiceResult<any>> {
     let token: string = con.GetToken()
     let _route: string = con.ReturnRoute()
-    const url: string = _route + 'SettingsMaintenance/CreateProgram'
+    const url: string = _route + `SettingsMaintenance/CreateProgram?optionType=${optionType}`
     let sr: ServiceResult<any> = new ServiceResult<any>()
     sr.errorMessage = 'Initializing'
     await axios

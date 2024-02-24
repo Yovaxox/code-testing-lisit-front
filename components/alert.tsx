@@ -21,6 +21,27 @@ export const OperationAlert = async (
   }
 }
 
+export const OperationAlertProgram = async (
+  isSuccess: boolean,
+  message: string = '',
+  alertType: string = ''
+) => {
+  try {
+    const customMessage =
+      message !== '' ? message : 'The operation was not successful'
+    const result = await Swal.fire({
+      title: isSuccess ? 'Successful Operation' : 'Something went wrong',
+      text: isSuccess ? message : customMessage,
+      icon: isSuccess ? alertType === 'success' ? 'success' : 'warning' : 'error',
+      confirmButtonColor: '#3085d6',
+      allowOutsideClick: false,
+    })
+    return result.isConfirmed
+  } catch (error) {
+    throw error
+  }
+}
+
 export const DeleteConfirm = (mensaje: string) => {
   return new Promise((resolve, reject) => {
       Swal.fire({

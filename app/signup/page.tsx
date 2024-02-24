@@ -133,6 +133,7 @@ export default function SignUp() {
       setRegion(null)
       setDistrictId(0)
       setDistrict(null)
+      setDistrictsList([])
 
       // Set the country id and the country in Autocomplete component
       setCountryId(countryId)
