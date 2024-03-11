@@ -317,6 +317,7 @@ const AssignedProgramsDatagrid = () => {
     } else {
       data = {
         id: assignedProgramId,
+        userId,
         programId,
         assignerId,
         year: year === '' ? 0 : parseInt(year),
@@ -386,7 +387,7 @@ const AssignedProgramsDatagrid = () => {
     if (parsedData.userTypeId === 1) {
       GetAssignedProgramsLogic(GetAssignedProgramsCallBack)
     } else {
-      GetMyAssignedProgramsLogic(GetMyAssignedProgramsCallBack, parseInt(parsedData.userTypeId))
+      GetMyAssignedProgramsLogic(GetMyAssignedProgramsCallBack, parseInt(parsedData.id))
     }
     GetUsersLogic(GetUsersCallBack)
     GetProgramsLogic(GetProgramsCallBack)
