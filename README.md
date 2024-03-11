@@ -12,6 +12,15 @@ npm install
 npm run dev
 ```
 
+# Credenciales
+Para entrar como administrador
+- Usuario: admin@live.cl
+- Contraseña: javier123
+
+Para entrar como usuario, puede registrarse o utlizar mi cuenta:
+- Usuario: yovax@live.cl
+- Contraseña: javier123
+
 Podrá abrir el proyecto en [http://localhost:3000](http://localhost:3000) o cualquier otro puerto que tenga configurado.
 
 # Adicional
